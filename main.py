@@ -59,7 +59,7 @@ class NewProxy:
 class OpLegends:
     def __init__(self, option, msl_server="server/443038/vote/", ms_server="vote/580828",
                  mmp_server="server/252752/vote/", bms_server="server-oplegends.4667/vote") -> None:
-        self.user = config_data["user"]
+        self.user = config_data["username"]
         self.option = option
         self.driver = webdriver.Chrome(
             service=Service('./chromedriver'), options=self.option)
@@ -167,7 +167,7 @@ class Main:
 
     def __init__(self) -> None:
         option = webdriver.ChromeOptions()
-        # option.add_argument("headless")
+        option.add_argument("headless")
         option.add_experimental_option('useAutomationExtension', False)
 
         if 'OpLegends' in config_data['server']:
