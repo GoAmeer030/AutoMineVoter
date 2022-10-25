@@ -5,7 +5,7 @@ username: ".GoAmeer030"
 is_proxy_change: False
 
 #change to "True" if you ready to solve captcha
-is_show_captcha: False
+is_show_captcha: True
 
 server:
   OpLegends:
