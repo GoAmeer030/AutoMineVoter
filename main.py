@@ -4,13 +4,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 
+import yaml
+from yaml import SafeLoader
+
 import random
 import time
-import sys
 
-global final_proxies, web_results
+global final_proxies, web_results, config_data, config_server_data
 final_proxies = []
 web_results = []
+config_data = {}
+config_server_data = {}
 
 
 class NewProxy:
@@ -53,23 +57,30 @@ class NewProxy:
 
 
 class OpLegends:
-    def __init__(self, option, user, is_proxy_change, msl_server="server/443038/vote/", ms_server="vote/580828",
+    def __init__(self, option, msl_server="server/443038/vote/", ms_server="vote/580828",
                  mmp_server="server/252752/vote/", bms_server="server-oplegends.4667/vote") -> None:
-        self.user = user
+        self.user = config_data["user"]
         self.option = option
         self.driver = webdriver.Chrome(
             service=Service('./chromedriver'), options=self.option)
-        self.is_proxy_change = is_proxy_change
+        self.is_proxy_change = config_data["is_proxy_change"]
 
         self.msl_server = msl_server
         self.ms_server = ms_server
         self.mmp_server = mmp_server
         self.bms_server = bms_server
 
-        self.minecraft_server_list_com()
-        self.minecraftservers_org()
-        self.minecraft_mp_com()
-        self.best_minecraft_servers_co()
+        if 'minecraft_server_list_com' in config_server_data['OpLegends']:
+            self.minecraft_server_list_com()
+
+        if 'minecraftservers_org' in config_server_data['OpLegends']:
+            self.minecraftservers_org()
+
+        if 'minecraft_mp_com' in config_server_data['OpLegends']:
+            self.minecraft_mp_com()
+
+        if 'best_minecraft_servers_co' in config_server_data['OpLegends']:
+            self.best_minecraft_servers_co()
 
         self.driver_close()
 
@@ -91,7 +102,7 @@ class OpLegends:
         web_results.append(result.text)
         print("OpLegends: Minecraft Server List:", web_results[-1])
         while ((web_results[-1] in ("Error with the Anti Spam check - Please try again. (Click F5 to reload the page).",
-                "")) or ("Username already voted today!" in web_results[-1])):
+                                    "")) or ("Username already voted today!" in web_results[-1])):
             if "Username already voted today!" in web_results[-1]:
                 # print("elif")
                 break
@@ -130,6 +141,23 @@ class OpLegends:
     def best_minecraft_servers_co(self):
         driver = Main.change_proxy(option=self.option) if self.is_proxy_change == "-y" else self.driver
         driver.get("https://best-minecraft-servers.co/" + self.bms_server)
+        text = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="main-content"]/div/input[3]')))
+        time.sleep(2)
+        text.send_keys(self.user)
+        button = driver.find_element(By.XPATH, '//*[@id="main-content"]/button')
+        time.sleep(1)
+        button.click()
+        time.sleep(5)
+        try:
+            result = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/section/div[1]/p')))
+            web_results.append(result.text)
+        except Exception:
+            result = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/section/div[1]/p')))
+            web_results.append(result.text)
+        print("OpLegends: Best Minecraft Server:", web_results[-1])
 
     def driver_close(self) -> None:
         self.driver.close()
@@ -137,12 +165,13 @@ class OpLegends:
 
 class Main:
 
-    def __init__(self, user='.GoAmeer030', is_proxy_change='-n') -> None:
+    def __init__(self) -> None:
         option = webdriver.ChromeOptions()
-        option.add_argument("headless")
+        # option.add_argument("headless")
         option.add_experimental_option('useAutomationExtension', False)
 
-        OpLegends(option=option, user=user, is_proxy_change=is_proxy_change)
+        if 'OpLegends' in config_data['server']:
+            OpLegends(option)
 
     @staticmethod
     def change_proxy(option):
@@ -156,8 +185,21 @@ class Main:
 
 
 if __name__ == "__main__":
-    try:
-        Main(sys.argv[1], sys.argv[2])
-    except IndexError:
-        Main()
-        # main(".dhiangarvijay27")
+    with open('config.yaml', 'r') as config:
+        config_data = dict(list(yaml.load_all(config, Loader=SafeLoader))[0])
+
+        raw_config_server_data = {}
+        for i in config_data['server']:
+            raw_config_server_data[i] = config_data['server'][i].split(' ')
+
+    for i in raw_config_server_data:
+        config_server_data[i] = []
+        if config_data['is_show_captcha'] is False:
+            for j in raw_config_server_data[i]:
+                if j[len(j)-2]+j[len(j)-1] != '.c':
+                    config_server_data[i].append(j[1:])
+        else:
+            for j in raw_config_server_data[i]:
+                config_server_data[i].append(j[1:])
+
+    Main()

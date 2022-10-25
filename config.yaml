@@ -1,0 +1,15 @@
+#change this with your username
+username: ".GoAmeer030"
+
+#change to "True" if you want to change proxies
+is_proxy_change: False
+
+#change to "True" if you ready to solve captcha
+is_show_captcha: False
+
+server:
+  OpLegends:
+    -minecraft_server_list_com
+    -minecraftservers_org.c
+    -minecraft_mp_com.c
+    -best_minecraft_servers_co
